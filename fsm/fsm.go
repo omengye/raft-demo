@@ -11,7 +11,7 @@ import (
 )
 
 type Fsm struct {
-	DataBase database
+	DataBase Database
 }
 
 func NewFsm() *Fsm {
@@ -42,40 +42,44 @@ func (f *Fsm) Restore(io.ReadCloser) error {
 	return nil
 }
 
-type database struct {
+type Database struct {
 	Data map[string]string
 	mu   sync.Mutex
 }
 
-func NewDatabase() database {
-	return database{
+func NewDatabase() Database {
+	return Database{
 		Data: make(map[string]string),
 	}
 }
 
-func (d *database) Get(key string) string {
+func (d *Database) Get(key string) string {
 	d.mu.Lock()
 	value := d.Data[key]
 	d.mu.Unlock()
 	return value
 }
 
-func (d *database) Set(key, value string) {
+func (d *Database) Set(key, value string) {
 	d.mu.Lock()
 	d.Data[key] = value
 	d.mu.Unlock()
 }
 
-func (d *database) Persist(sink raft.SnapshotSink) error {
+func (d *Database) Persist(sink raft.SnapshotSink) error {
 	d.mu.Lock()
 	data, err := json.Marshal(d.Data)
 	d.mu.Unlock()
 	if err != nil {
 		return err
 	}
-	sink.Write(data)
-	sink.Close()
+	if _, err = sink.Write(data); err != nil {
+		return err
+	}
+	if err = sink.Close(); err != nil {
+		return err
+	}
 	return nil
 }
 
-func (d *database) Release() {}
+func (d *Database) Release() {}

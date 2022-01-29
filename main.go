@@ -18,7 +18,6 @@ var (
 	raftAddr    string
 	raftId      string
 	raftCluster string
-	raftDir     string
 )
 
 var (
@@ -41,7 +40,7 @@ func main() {
 		return
 	}
 	raftDir := "node/raft_" + raftId
-	os.MkdirAll(raftDir, 0700)
+	_ = os.MkdirAll(raftDir, 0700)
 
 	// 初始化raft
 	myRaft, fm, err := myraft.NewMyRaft(raftAddr, raftId, raftDir)
@@ -73,7 +72,11 @@ func main() {
 
 	http.HandleFunc("/set", httpServer.Set)
 	http.HandleFunc("/get", httpServer.Get)
-	http.ListenAndServe(httpAddr, nil)
+	if err = http.ListenAndServe(httpAddr, nil); err != nil {
+		fmt.Println("http listen error ", err)
+		os.Exit(1)
+		return
+	}
 
 	// 关闭raft
 	shutdownFuture := myRaft.Shutdown()

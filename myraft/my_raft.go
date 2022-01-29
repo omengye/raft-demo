@@ -10,15 +10,15 @@ import (
 	fsm "github.com/vision9527/raft-demo/fsm"
 
 	"github.com/hashicorp/raft"
-	raftboltdb "github.com/hashicorp/raft-boltdb"
+	raftboltdb "github.com/hashicorp/raft-boltdb/v2"
 )
 
 func NewMyRaft(raftAddr, raftId, raftDir string) (*raft.Raft, *fsm.Fsm, error) {
 	config := raft.DefaultConfig()
 	config.LocalID = raft.ServerID(raftId)
-	// config.HeartbeatTimeout = 1000 * time.Millisecond
-	// config.ElectionTimeout = 1000 * time.Millisecond
-	// config.CommitTimeout = 1000 * time.Millisecond
+	config.HeartbeatTimeout = 1000 * time.Millisecond
+	config.ElectionTimeout = 1000 * time.Millisecond
+	config.CommitTimeout = 1000 * time.Millisecond
 
 	addr, err := net.ResolveTCPAddr("tcp", raftAddr)
 	if err != nil {
